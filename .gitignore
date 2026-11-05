@@ -1,0 +1,9 @@
+# captures and build artifacts
+captures/
+*.jpg
+*.png
+__pycache__/
+*.pyc
+.venv/
+venv/
+.DS_Store
