@@ -32,12 +32,18 @@ layouts before spending a sheet.
 
 | Screen | Tap / click | Keys |
 |---|---|---|
-| Live view | Start | `space` start, `C` switch camera |
-| Pick photos | tap photos in the order you want them | `1`-`4` add/remove, `backspace` undo, `enter` next, `R` retake |
+| Live view | Start, Vertical / Horizontal | `space` start, `O` orientation, `C` switch camera |
+| Pick photos | tap photos in the order you want them, Vertical / Horizontal | `1`-`4` add/remove, `O` orientation, `backspace` undo, `enter` next, `R` retake |
 | Copies | `-` / `+`, Print | `-` `+` or `1`-`9`, `enter` print, `esc` back |
 | Anywhere | Fullscreen button | `F` fullscreen |
 
-Picking 1, 2 or 4 photos picks the single, duo (sideways) or quad layout.
+Picking 1, 2 or 4 photos picks the single, duo or quad layout.
+
+**Vertical or horizontal:** vertical prints are held upright (duo = two photos
+stacked). Horizontal prints are held sideways with the chin on the right
+(duo = two photos side by side); the live view and previews turn sideways to
+match. Each shot keeps the camera's full frame, so you can switch orientation
+on the pick screen after shooting too. The booth remembers the last choice.
 The pick and copies screens go back to the start after 2 minutes idle.
 
 ## Cameras

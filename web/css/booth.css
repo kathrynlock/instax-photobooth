@@ -86,37 +86,50 @@ h1 { font-size: clamp(22px, 2.7vw, 40px); margin: 0 0 2.2vh; font-weight: 700; t
 
 /* ---------- the Instax Mini film card ----------
    A 54 x 86 mm card with a 46 x 62 mm picture area: 4 mm sides, 6 mm top,
-   18 mm chin. Set --h for the card's height; everything else follows. */
+   18 mm chin. --u is one millimetre on screen; everything follows from it.
+   .landscape is the same card turned sideways, chin on the right. */
 .film-card {
-  --h: 70vh;
+  --u: calc(70vh / 86);
   position: relative;
-  height: var(--h);
-  width: calc(var(--h) * 54 / 86);
+  width: calc(var(--u) * 54);
+  height: calc(var(--u) * 86);
   flex: none;
-  border-radius: calc(var(--h) * 0.012);
+  border-radius: calc(var(--u) * 1);
   background-color: var(--film-white);
   background-image: var(--film-texture, none);
   background-size: 160px 160px;
   box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.7),
     0 1px 2px rgba(0, 0, 0, 0.08),
-    0 calc(var(--h) * 0.025) calc(var(--h) * 0.05) var(--shadow);
+    0 calc(var(--u) * 2.2) calc(var(--u) * 4.3) var(--shadow);
+  transition: width 0.35s ease, height 0.35s ease;
 }
 /* the faint seam across the chin where the developer pod sits */
 .film-card::before {
   content: ""; position: absolute;
-  left: calc(var(--h) * 1.2 / 86); right: calc(var(--h) * 1.2 / 86);
-  top: calc(var(--h) * 71.2 / 86);
+  left: calc(var(--u) * 1.2); right: calc(var(--u) * 1.2);
+  top: calc(var(--u) * 71.2);
   height: 1px; background: rgba(0, 0, 0, 0.045);
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 .film-card .picture {
   position: absolute; overflow: hidden;
-  left: calc(var(--h) * 4 / 86);
-  top: calc(var(--h) * 6 / 86);
-  width: calc(var(--h) * 46 / 86);
-  height: calc(var(--h) * 62 / 86);
+  left: calc(var(--u) * 4);
+  top: calc(var(--u) * 6);
+  width: calc(var(--u) * 46);
+  height: calc(var(--u) * 62);
   background: #2b2a26;
+  transition: inherit;
+}
+.film-card.landscape { width: calc(var(--u) * 86); height: calc(var(--u) * 54); }
+.film-card.landscape::before {
+  top: calc(var(--u) * 1.2); bottom: calc(var(--u) * 1.2); right: auto;
+  left: calc(var(--u) * 71.2); width: 1px; height: auto;
+  box-shadow: 1px 0 0 rgba(255, 255, 255, 0.8);
+}
+.film-card.landscape .picture {
+  left: calc(var(--u) * 6); top: calc(var(--u) * 4);
+  width: calc(var(--u) * 62); height: calc(var(--u) * 46);
 }
 /* the slight step where the picture window meets the white frame */
 .film-card .picture::after {
@@ -131,7 +144,8 @@ h1 { font-size: clamp(22px, 2.7vw, 40px); margin: 0 0 2.2vh; font-weight: 700; t
 /* ---------- live view ---------- */
 #screen-live { gap: 4vw; }
 .live-center { display: flex; flex-direction: column; align-items: center; }
-.live-card { --h: min(70vh, 46vw); }
+.live-card { --u: min(68vh / 86, 46vw / 86); }
+.live-card.landscape { --u: min(68vh / 54, 52vw / 86); }
 #video { transform: scaleX(-1); filter: sepia(0.14) saturate(0.92) contrast(1.05) brightness(1.03); }
 .look-overlay {
   position: absolute; inset: 0; pointer-events: none;
@@ -140,7 +154,7 @@ h1 { font-size: clamp(22px, 2.7vw, 40px); margin: 0 0 2.2vh; font-weight: 700; t
 .shoot-label { font-size: clamp(20px, 2.4vw, 34px); height: 1.4em; margin-bottom: 1.2vh; }
 .countdown {
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-  font-size: calc(var(--h) * 0.3); color: var(--cream);
+  font-size: calc(var(--u) * 24); color: var(--cream);
   text-shadow: 0 0 2px var(--iguana), 0 4px 18px rgba(0, 0, 0, 0.35);
   -webkit-text-stroke: 3px var(--iguana); paint-order: stroke fill;
   pointer-events: none;
@@ -170,11 +184,12 @@ body.shooting #start-btn, body.shooting .live-center .hint { visibility: hidden;
 #screen-pick { gap: 5vw; padding-bottom: 8vh; }
 .pick-left, .pick-right { display: flex; flex-direction: column; align-items: center; }
 .thumbs {
-  --th: min(31vh, 22vw);
-  display: grid; grid-template-columns: repeat(2, calc(var(--th) * 0.75)); gap: 2.4vh;
+  --tht: min(31vh, 22vw); --tw: calc(var(--tht) * 0.75);
+  display: grid; grid-template-columns: repeat(2, var(--tw)); gap: 2.4vh;
 }
+.thumbs.landscape { --tw: min(19vw, 30vh); --tht: calc(var(--tw) * 0.75); }
 .thumb {
-  position: relative; width: calc(var(--th) * 0.75); height: var(--th);
+  position: relative; width: var(--tw); height: var(--tht);
   padding: 0; border: 0; border-radius: 6px; overflow: visible; cursor: pointer; background: none;
 }
 .thumb img { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; display: block; }
@@ -194,7 +209,8 @@ body.shooting #start-btn, body.shooting .live-center .hint { visibility: hidden;
   align-items: center; justify-content: center; font-size: 26px;
 }
 .thumb.selected .badge { display: flex; }
-.print-card { --h: min(66vh, 40vw); }
+.print-card { --u: min(66vh / 86, 40vw / 86); }
+.print-card.landscape { --u: min(60vh / 54, 46vw / 86); }
 .empty-msg {
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
   text-align: center; padding: 12%; font-size: clamp(16px, 1.6vw, 24px);
@@ -229,7 +245,8 @@ body.shooting #start-btn, body.shooting .live-center .hint { visibility: hidden;
   position: fixed; inset: 0; z-index: 30; background: var(--cream);
   display: flex; flex-direction: column; align-items: center; justify-content: center;
 }
-.feedback-card { --h: min(70vh, 46vw); transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1); }
+.feedback-card { --u: min(68vh / 86, 46vw / 86); transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1); }
+.feedback-card.landscape { --u: min(68vh / 54, 52vw / 86); }
 .shot-feedback.settle .feedback-card { transform: translateY(-4vh) scale(0.55) rotate(-4deg); }
 .feedback-label {
   position: absolute; bottom: 14vh; font-size: clamp(28px, 3.4vw, 48px);
@@ -240,3 +257,22 @@ body.shooting #start-btn, body.shooting .live-center .hint { visibility: hidden;
   position: fixed; inset: 0; z-index: 40; background: #fff;
   opacity: 0; pointer-events: none;
 }
+
+/* ---------- vertical / horizontal switch ---------- */
+.orient {
+  display: inline-flex; gap: 4px; padding: 4px; margin-top: 1.6vh;
+  background: var(--glass-green); border-radius: 999px;
+}
+.orient button {
+  font: inherit; font-size: clamp(14px, 1.3vw, 19px); color: var(--iguana);
+  background: transparent; border: 0; border-radius: 999px; padding: 6px 16px;
+  cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+}
+.orient button.on { background: var(--cornflower); color: var(--cream); }
+.orient .glyph {
+  display: inline-block; border: 2px solid currentColor; border-radius: 2px;
+  border-bottom-width: 5px;
+}
+.orient .glyph.v { width: 11px; height: 17px; }
+.orient .glyph.h { width: 17px; height: 11px; border-bottom-width: 2px; border-right-width: 5px; }
+body.shooting .orient { visibility: hidden; }

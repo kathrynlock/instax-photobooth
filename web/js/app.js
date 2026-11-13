@@ -25,8 +25,9 @@
     busy: false,          // shooting or printing: ignore most input
     frames: [],           // captured canvases, unmirrored
     order: [],            // indices into frames, in print order
-    printCanvas: null,
-    printUrl: null,
+    printCanvas: null,    // the 600x800 image sent to the printer
+    printUrl: null,       // preview of the print as the guest will hold it
+    orientation: storage.get("booth.orientation") === "horizontal" ? "horizontal" : cfg.DEFAULT_ORIENTATION,
     copies: 1,
     printedCopies: 0,
     printer: DEMO ? new DemoPrinter() : new InstaxPrinter(),
@@ -137,15 +138,54 @@
     startCamera(state.cameras[(i + 1) % state.cameras.length].deviceId);
   }
 
-  // one frame from the camera, center-cropped to portrait, unmirrored
+  // one full, unmirrored frame from the camera. Kept uncropped so each photo
+  // cell (and either orientation) can crop the most it can from it.
   function grabFrame() {
     const v = $("video");
     if (!v.videoWidth) return null;
-    const [aw, ah] = cfg.CAPTURE_ASPECT;
-    const [sx, sy, sw, sh] = centerCrop(v.videoWidth, v.videoHeight, aw, ah);
-    const c = makeCanvas(sw, sh);
-    c.getContext("2d").drawImage(v, sx, sy, sw, sh, 0, 0, sw, sh);
+    const c = makeCanvas(v.videoWidth, v.videoHeight);
+    c.getContext("2d").drawImage(v, 0, 0);
     return c;
+  }
+
+  // a frame cropped to what the live view showed for the current orientation
+  function framed(src) {
+    const [aw, ah] = cfg.CAPTURE_ASPECT[state.orientation];
+    const [sx, sy, sw, sh] = centerCrop(src.width, src.height, aw, ah);
+    const c = makeCanvas(sw, sh);
+    c.getContext("2d").drawImage(src, sx, sy, sw, sh, 0, 0, sw, sh);
+    return c;
+  }
+
+  // ------------------------------------------------------------ orientation
+  function renderOrientation() {
+    const land = state.orientation === "horizontal";
+    document.querySelectorAll(".film-card").forEach((c) => c.classList.toggle("landscape", land));
+    $("thumbs").classList.toggle("landscape", land);
+    document.querySelectorAll(".orient button").forEach((b) =>
+      b.classList.toggle("on", b.dataset.o === state.orientation));
+  }
+
+  function setOrientation(o) {
+    if (state.busy || o === state.orientation) return;
+    state.orientation = o;
+    storage.set("booth.orientation", o);
+    renderOrientation();
+    if (state.screen === "pick") { renderThumbs(); renderPicker(); }
+  }
+
+  function toggleOrientation() {
+    setOrientation(state.orientation === "horizontal" ? "vertical" : "horizontal");
+  }
+
+  function buildOrientationSwitches() {
+    document.querySelectorAll(".orient").forEach((el) => {
+      el.innerHTML =
+        '<button type="button" data-o="vertical"><span class="glyph v"></span>Vertical</button>' +
+        '<button type="button" data-o="horizontal"><span class="glyph h"></span>Horizontal</button>';
+      el.querySelectorAll("button").forEach((b) => b.addEventListener("click", () => setOrientation(b.dataset.o)));
+    });
+    renderOrientation();
   }
 
   function mirrored(src) {
@@ -205,7 +245,7 @@
     const fb = $("shot-feedback");
     const pic = fb.querySelector(".picture");
     pic.innerHTML = "";
-    pic.appendChild(mirrored(frame));       // show it the way the guest saw themselves
+    pic.appendChild(mirrored(framed(frame)));   // the way the guest saw themselves
     $("feedback-label").textContent = shotNumber < total ? "Got it!" : "All done!";
     fb.classList.remove("settle", "hidden");
 
@@ -257,19 +297,23 @@
     state.frames = frames;
     state.order = [];
     state.printCanvas = null;
+    renderThumbs();
+    renderPicker();
+    show("pick");
+  }
+
+  function renderThumbs() {
     const thumbs = $("thumbs");
     thumbs.innerHTML = "";
-    frames.forEach((f, i) => {
+    state.frames.forEach((f, i) => {
       const b = document.createElement("button");
       b.className = "thumb";
       b.type = "button";
-      b.innerHTML = `<img alt="Photo ${i + 1}" src="${f.toDataURL("image/jpeg", 0.85)}">` +
+      b.innerHTML = `<img alt="Photo ${i + 1}" src="${framed(f).toDataURL("image/jpeg", 0.85)}">` +
         `<span class="num">${i + 1}</span><span class="badge"></span>`;
       b.addEventListener("click", () => toggle(i));
       thumbs.appendChild(b);
     });
-    renderPicker();
-    show("pick");
   }
 
   function currentLayout() {
@@ -295,7 +339,6 @@
     const n = state.order.length;
     const pic = $("pick-card").querySelector(".picture");
     $("next-btn").disabled = !layout;
-    $("sideways-note").classList.toggle("hidden", !(layout && cfg.SIDEWAYS_LAYOUTS.includes(layout)));
     $("print-title").textContent = layout ? `Your print (${n} photo${n > 1 ? "s" : ""})` : "Your print";
 
     pic.querySelectorAll("img").forEach((x) => x.remove());
@@ -309,10 +352,12 @@
     empty.classList.add("hidden");
     // compose on the next frame so the tap feels instant
     const token = ++composeToken;
+    state.printCanvas = null;
     requestAnimationFrame(() => setTimeout(() => {
       if (token !== composeToken) return;
-      state.printCanvas = composePrint(state.order.map((i) => state.frames[i]), layout);
-      state.printUrl = state.printCanvas.toDataURL("image/jpeg", 0.92);
+      const { view, print } = composePrint(state.order.map((i) => state.frames[i]), layout, state.orientation);
+      state.printCanvas = print;
+      state.printUrl = view.toDataURL("image/jpeg", 0.92);
       setPrintImage(pic, state.printUrl);
     }, 0));
   }
@@ -523,10 +568,12 @@
       case "live":
         if (k === " " || k === "Enter") { e.preventDefault(); shootSession(); }
         else if (k === "c" || k === "C") cycleCamera();
+        else if (k === "o" || k === "O") toggleOrientation();
         break;
       case "pick":
         if (k >= "1" && k <= String(state.frames.length)) toggle(Number(k) - 1);
         else if (k === "Backspace") undo();
+        else if (k === "o" || k === "O") toggleOrientation();
         else if (k === "Enter") toCopies();
         else if (k === "r" || k === "R" || k === "Escape") goHome();
         break;
@@ -567,6 +614,7 @@
     filmTexture();
     try { await document.fonts.load("700 20px Grandstander"); } catch (e) { /* fallback font */ }
     drawOrnaments();
+    buildOrientationSwitches();
     wire();
     renderPrinterPill();
     if (DEMO) {

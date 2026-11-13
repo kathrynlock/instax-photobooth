@@ -1,8 +1,8 @@
 // Compose captured frames into a single 600x800 instant-film print.
-// A port of photobooth/layout.py.
-//   single  one photo
-//   duo     two photos stacked, rotated to be viewed with the print sideways
-//   quad    a 2x2 grid of four photos
+// A port of photobooth/layout.py, plus an orientation:
+//   vertical    print held upright: single, duo (2 stacked), quad (2x2)
+//   horizontal  print held sideways, chin on the right: the layout is built on
+//               an 800x600 canvas and rotated 90 degrees clockwise onto the print
 // The print fills the film's whole picture area: the white frame and chin are
 // part of the physical film, not the image.
 
@@ -10,11 +10,17 @@
   const cfg = Booth.config;
   const { applyFilmLook, makeCanvas } = Booth.film;
 
-  // (x, y, w, h) of each photo cell on the print, in fill order
-  function cellRects(layoutName) {
-    const [rows, cols, count] = cfg.LAYOUTS[layoutName];
-    const cellW = Math.floor((cfg.CANVAS_W - (cols - 1) * cfg.GUTTER) / cols);
-    const cellH = Math.floor((cfg.CANVAS_H - (rows - 1) * cfg.GUTTER) / rows);
+  // canvas size the layout is drawn on, before any rotation
+  function viewSize(orientation) {
+    return orientation === "horizontal" ? [cfg.CANVAS_H, cfg.CANVAS_W] : [cfg.CANVAS_W, cfg.CANVAS_H];
+  }
+
+  // (x, y, w, h) of each photo cell, in fill order, on the unrotated canvas
+  function cellRects(layoutName, orientation = "vertical") {
+    const [rows, cols, count] = cfg.LAYOUTS[orientation][layoutName];
+    const [W, H] = viewSize(orientation);
+    const cellW = Math.floor((W - (cols - 1) * cfg.GUTTER) / cols);
+    const cellH = Math.floor((H - (rows - 1) * cfg.GUTTER) / rows);
     const rects = [];
     for (let i = 0; i < count; i++) {
       const r = Math.floor(i / cols), c = i % cols;
@@ -34,7 +40,7 @@
     return [0, Math.floor((srcH - h) / 2), srcW, h];
   }
 
-  // rotate 90 degrees clockwise (for sideways layouts)
+  // rotate 90 degrees clockwise (landscape layout -> portrait print)
   function rotateCW(src) {
     const out = makeCanvas(src.height, src.width);
     const ctx = out.getContext("2d");
@@ -42,10 +48,6 @@
     ctx.rotate(Math.PI / 2);
     ctx.drawImage(src, 0, 0);
     return out;
-  }
-
-  function orientForLayout(frame, layoutName) {
-    return cfg.SIDEWAYS_LAYOUTS.includes(layoutName) ? rotateCW(frame) : frame;
   }
 
   // crop a frame to a cell's aspect, resize, and apply the film look
@@ -58,20 +60,23 @@
     return applyFilmLook(cell);
   }
 
-  // frames: canvases (unmirrored), at least the layout's photo count
-  function composePrint(frames, layoutName) {
-    if (!cfg.LAYOUTS[layoutName]) throw new Error(`unknown layout ${layoutName}`);
-    const count = cfg.LAYOUTS[layoutName][2];
-    if (frames.length < count) throw new Error(`layout ${layoutName} needs ${count} frames`);
+  // frames: canvases (unmirrored), at least the layout's photo count.
+  // Returns { view, print }: `view` is the layout the way the guest will hold
+  // it (800x600 when horizontal), `print` is the 600x800 image sent to the printer.
+  function composePrint(frames, layoutName, orientation = "vertical") {
+    const spec = cfg.LAYOUTS[orientation] && cfg.LAYOUTS[orientation][layoutName];
+    if (!spec) throw new Error(`unknown layout ${orientation}/${layoutName}`);
+    if (frames.length < spec[2]) throw new Error(`layout ${layoutName} needs ${spec[2]} frames`);
 
-    const canvas = makeCanvas(cfg.CANVAS_W, cfg.CANVAS_H);
-    const ctx = canvas.getContext("2d");
+    const [W, H] = viewSize(orientation);
+    const view = makeCanvas(W, H);
+    const ctx = view.getContext("2d");
     ctx.fillStyle = `rgb(${cfg.BORDER_COLOR.join(",")})`;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    cellRects(layoutName).forEach(([x, y, w, h], i) => {
-      ctx.drawImage(renderCell(orientForLayout(frames[i], layoutName), w, h), x, y);
+    ctx.fillRect(0, 0, W, H);
+    cellRects(layoutName, orientation).forEach(([x, y, w, h], i) => {
+      ctx.drawImage(renderCell(frames[i], w, h), x, y);
     });
-    return canvas;
+    return { view, print: orientation === "horizontal" ? rotateCW(view) : view };
   }
 
   // The print as a JPEG small enough for the Mini Link 3. Tries the configured

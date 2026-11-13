@@ -21,22 +21,33 @@ Booth.config = {
   FILM_BORDER_MM: [4, 6, 18],       // side, top, bottom (the chin)
 
   // --- Capture ----------------------------------------------------------------
-  // Shots are center-cropped from the landscape webcam feed to this portrait
-  // aspect (width, height). The live view shows the same crop.
-  CAPTURE_ASPECT: [3, 4],
+  // Each shot keeps the camera's full frame; the live view shows this crop of it
+  // (width, height) so guests frame themselves for the print they'll get.
+  // Each photo cell on the print is then center-cropped from the full frame.
+  CAPTURE_ASPECT: { vertical: [3, 4], horizontal: [4, 3] },
   COUNTDOWN_SECONDS: 3,
   SHOTS_PER_SESSION: 4,
 
-  // --- Layouts: name -> [rows, cols, photoCount] -----------------------------
+  // --- Orientation ---------------------------------------------------------------
+  // vertical:   the print is held upright, chin at the bottom.
+  // horizontal: the print is held sideways, chin on the right. The photos are
+  //             laid out on an 800x600 landscape canvas, then the whole thing is
+  //             rotated 90 degrees clockwise onto the 600x800 print.
+  DEFAULT_ORIENTATION: "vertical",
+
+  // --- Layouts: name -> [rows, cols, photoCount], per orientation --------------
   LAYOUTS: {
-    single: [1, 1, 1],
-    duo: [2, 1, 2],
-    quad: [2, 2, 4],
+    vertical: {
+      single: [1, 1, 1],
+      duo: [2, 1, 2],     // two landscape photos stacked
+      quad: [2, 2, 4],
+    },
+    horizontal: {
+      single: [1, 1, 1],
+      duo: [1, 2, 2],     // two portrait photos side by side
+      quad: [2, 2, 4],
+    },
   },
-  // Layouts meant to be viewed with the print turned sideways. Each photo is
-  // rotated 90 degrees clockwise, so holding the print with the chin on the
-  // right shows the photos upright, side by side, first photo on the left.
-  SIDEWAYS_LAYOUTS: ["duo"],
 
   // Copies of the finished print a guest can order in one go. A Mini pack holds 10.
   MAX_COPIES: 5,
@@ -87,5 +98,5 @@ Booth.config = {
 };
 
 Booth.config.COUNT_TO_LAYOUT = Object.fromEntries(
-  Object.entries(Booth.config.LAYOUTS).map(([name, spec]) => [spec[2], name])
+  Object.entries(Booth.config.LAYOUTS.vertical).map(([name, spec]) => [spec[2], name])
 );

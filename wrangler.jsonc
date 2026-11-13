@@ -1,0 +1,8 @@
+// Cloudflare deploy for the web booth: serves ./web as static files at
+// photobooth.katelock.com. Deploy with:  npx wrangler deploy
+{
+  "name": "instax-photobooth",
+  "compatibility_date": "2026-11-01",
+  "assets": { "directory": "./web" },
+  "routes": [{ "pattern": "photobooth.katelock.com", "custom_domain": true }]
+}
