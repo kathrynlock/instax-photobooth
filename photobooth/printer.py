@@ -2,6 +2,7 @@
 Instax Mini Link 3). We shell out rather than bind the library, so the whole
 print path is just `instantlink print <file>`."""
 
+import re
 import subprocess
 
 from . import config as cfg
@@ -23,7 +24,10 @@ def status():
     except subprocess.TimeoutExpired:
         return False, "`instantlink status` timed out. Is the printer on and awake?"
     text = (result.stdout or result.stderr).strip()
-    return result.returncode == 0, text
+    # `instantlink status` exits 0 even when no printer is found, reporting
+    # "Connected: no" / "No Instax printer found" instead, so check the text.
+    not_found = re.search(r"Connected:\s*no\b|No Instax printer", text, re.IGNORECASE)
+    return result.returncode == 0 and not not_found, text
 
 
 def print_image(path):

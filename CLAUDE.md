@@ -6,8 +6,9 @@ Read this before making architectural changes.
 ## Goal
 
 A photobooth: a Mac Air drives the experience, a camera takes the photos, and a
-Fujifilm Instax Mini Link 3 prints them. Guests pick how many photos go on a
-print (1, 2, or 4) and how many copies. The final booth runs fullscreen on the
+Fujifilm Instax Mini Link 3 prints them. Each session shoots 4 photos; guests
+then pick which shots go on the print and in what order (1, 2, or 4 of them,
+which sets the layout) and how many copies. The final booth runs fullscreen on the
 Mac with a vintage, retro-film aesthetic.
 
 ## Current stage: proof of concept
@@ -64,10 +65,26 @@ beyond that resolution is not needed for the print itself.
 
 ## Likely next tasks
 
-1. Add a copies picker (print the same file N times).
-2. Add a Ricoh capture backend implementing the WiFi HTTP shutter + view-size
+1. Add a Ricoh capture backend implementing the WiFi HTTP shutter + view-size
    pull, behind the same interface `capture.py` exposes, selectable by config.
-3. Build the fullscreen booth UI (home, framing, countdown, review, layout
+2. Build the fullscreen booth UI (home, framing, countdown, review, layout
    picker, copies, printing, success, error states) per the design brief.
-4. Confirm `instantlink print` behavior against the real Mini Link 3 hardware
+3. Confirm `instantlink print` behavior against the real Mini Link 3 hardware
    (first physical test print).
+
+## Web booth (web/), added 2026-11-12
+
+- `web/` is a no-build, plain-JS version of the whole booth (index.html + js/*).
+  It is now the main path; the Python booth is the fallback.
+- **Printing over Web Bluetooth is proven on the real Mini Link 3** (test print
+  via instax-link-web on 2026-11-12 came out and developed correctly).
+  `web/js/instax.js` is adapted from linssenste/instax-link-web (MIT): same
+  protocol, packet framing, 900-byte image chunks, 182-byte writes.
+- JPEGs are capped at 55KB (InstantLink's documented Mini Link 3 limit) via a
+  quality search in `web/js/layout.js`.
+- `web/js/config.js` mirrors `photobooth/config.py` (RGB, not BGR). Keep the two
+  in sync when tuning the look; `film.js`/`layout.js`/`ornaments.js` are ports.
+- Camera is anything getUserMedia sees (webcam, Sony USB Streaming, HDMI
+  capture card). Flash photography would need a tethered stills camera
+  (gphoto2) behind a small local helper; not built.
+- `?demo` in the URL simulates the printer and downloads prints instead.
