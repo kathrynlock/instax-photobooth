@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Instax Booth</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="css/booth.css">
+</head>
+<body>
+  <!-- top bar: camera picker (left), printer status (right) -->
+  <div class="topbar">
+    <label class="camera-pick" title="Camera (C cycles)">
+      <span>Camera</span>
+      <select id="camera-select" aria-label="Camera"></select>
+    </label>
+    <div class="topbar-right">
+      <button id="printer-pill" class="pill" type="button">Connect printer</button>
+      <button id="fullscreen-btn" class="pill ghost" type="button" title="Fullscreen (F)">Fullscreen</button>
+    </div>
+  </div>
+
+  <!-- 1. live view + shooting -->
+  <section id="screen-live" class="screen active">
+    <div class="ovals ovals-left" data-start="0"></div>
+    <div class="live-center">
+      <div id="shoot-label" class="shoot-label">&nbsp;</div>
+      <div class="film-card live-card" id="live-card">
+        <div class="picture">
+          <video id="video" autoplay playsinline muted></video>
+          <div class="look-overlay"></div>
+          <div id="countdown" class="countdown"></div>
+          <div id="camera-message" class="camera-message hidden"></div>
+        </div>
+      </div>
+      <div id="progress-dots" class="dots"></div>
+      <button id="start-btn" class="btn primary big" type="button">Start</button>
+      <div class="hint">press space or tap start · 4 photos</div>
+    </div>
+    <div class="ovals ovals-right" data-start="3"></div>
+  </section>
+
+  <!-- 2. pick photos -> layout -->
+  <section id="screen-pick" class="screen">
+    <div class="pick-left">
+      <h1>Pick your photos, in order</h1>
+      <div id="thumbs" class="thumbs"></div>
+    </div>
+    <div class="pick-right">
+      <h1 id="print-title">Your print</h1>
+      <div class="film-card print-card" id="pick-card">
+        <div class="picture">
+          <div id="pick-empty" class="empty-msg">Select 1, 2 or 4</div>
+        </div>
+      </div>
+      <div id="sideways-note" class="note hidden">turn the print sideways to view</div>
+    </div>
+    <div class="actions">
+      <button id="retake-btn" class="btn" type="button">Retake</button>
+      <button id="next-btn" class="btn primary" type="button" disabled>Next</button>
+    </div>
+    <div class="hint bottom">1-4 or tap: add/remove · enter: next · backspace: undo · R: retake</div>
+  </section>
+
+  <!-- 3. copies -->
+  <section id="screen-copies" class="screen split">
+    <div class="split-left">
+      <div class="film-card print-card" id="copies-card"><div class="picture"></div></div>
+    </div>
+    <div class="split-right">
+      <div class="oval-row" data-start="0"></div>
+      <h1>How many copies?</h1>
+      <div class="stepper">
+        <button id="minus-btn" class="round" type="button" aria-label="Fewer">&minus;</button>
+        <div id="copies-count" class="count">1</div>
+        <button id="plus-btn" class="round" type="button" aria-label="More">+</button>
+      </div>
+      <div id="copies-sub" class="sub">1 print</div>
+      <div id="film-note" class="note"></div>
+      <div class="actions inline">
+        <button id="back-btn" class="btn" type="button">Back</button>
+        <button id="print-btn" class="btn primary" type="button">Print</button>
+      </div>
+      <div class="hint">- / +: change · enter: print · esc: back</div>
+    </div>
+  </section>
+
+  <!-- 4. printing / done / error -->
+  <section id="screen-status" class="screen split">
+    <div class="split-left">
+      <div class="film-card print-card" id="status-card"><div class="picture"></div></div>
+    </div>
+    <div class="split-right">
+      <div class="oval-row" data-start="3"></div>
+      <h1 id="status-headline">Printing...</h1>
+      <div id="status-detail" class="sub">keep the printer nearby</div>
+      <div id="status-bar" class="bar"><div></div></div>
+      <div id="status-actions" class="actions inline hidden">
+        <button id="home-btn" class="btn" type="button">Start over</button>
+        <button id="retry-btn" class="btn primary" type="button">Try again</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- between-shot feedback: the shot settles into a little card -->
+  <div id="shot-feedback" class="shot-feedback hidden">
+    <div class="film-card feedback-card"><div class="picture"></div></div>
+    <div id="feedback-label" class="feedback-label">Got it!</div>
+  </div>
+  <div id="flash" class="flash"></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/film.js"></script>
+  <script src="js/layout.js"></script>
+  <script src="js/ornaments.js"></script>
+  <script src="js/instax.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

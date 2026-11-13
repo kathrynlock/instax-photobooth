@@ -1,0 +1,242 @@
+/* Instax Booth: warm cream page, Grandstander type, pastel accents.
+   Palette and proportions mirror photobooth/config.py. */
+
+@font-face {
+  font-family: "Grandstander";
+  src: url("../fonts/Grandstander.ttf") format("truetype");
+  font-weight: 100 900;
+  font-display: block;
+}
+
+:root {
+  --cornflower: #8FA9EA;
+  --country-air: #D7DBF2;
+  --glass-green: #E9E9D5;
+  --charlock: #E5E593;
+  --iguana: #818251;
+  --cream: #FDF4EF;
+  --sage: #A8C496;
+  --film-white: #F9F7F4;
+  --shadow: rgba(92, 84, 60, 0.22);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--cream);
+  color: var(--iguana);
+  font-family: "Grandstander", ui-rounded, system-ui, sans-serif;
+  font-weight: 700;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+h1 { font-size: clamp(22px, 2.7vw, 40px); margin: 0 0 2.2vh; font-weight: 700; text-align: center; }
+.hidden { display: none !important; }
+
+/* ---------- top bar ---------- */
+.topbar {
+  position: fixed; inset: 0 0 auto 0; z-index: 20;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 14px 18px; pointer-events: none;
+}
+.topbar > * { pointer-events: auto; }
+.topbar-right { display: flex; gap: 8px; }
+.camera-pick { display: flex; gap: 8px; align-items: center; font-size: 14px; opacity: 0.55; transition: opacity 0.2s; }
+.camera-pick:hover, .camera-pick:focus-within { opacity: 1; }
+.camera-pick select {
+  font: inherit; color: var(--iguana); background: var(--glass-green);
+  border: 0; border-radius: 999px; padding: 6px 12px; max-width: 260px;
+}
+.pill {
+  font: inherit; font-size: 14px; color: var(--iguana); background: var(--glass-green);
+  border: 0; border-radius: 999px; padding: 8px 16px; cursor: pointer;
+}
+.pill.connected { background: var(--sage); color: #fff; }
+.pill.warn { background: var(--charlock); }
+.pill.ghost { background: transparent; opacity: 0.5; }
+.pill.ghost:hover { opacity: 1; }
+
+/* ---------- buttons ---------- */
+.btn {
+  font: inherit; font-size: clamp(18px, 1.8vw, 26px); color: var(--iguana);
+  background: var(--glass-green); border: 0; border-radius: 999px;
+  padding: 0.6em 1.6em; cursor: pointer; transition: transform 0.12s, opacity 0.2s;
+  box-shadow: 0 4px 0 rgba(129, 130, 81, 0.18);
+}
+.btn:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(129, 130, 81, 0.18); }
+.btn.primary { background: var(--cornflower); color: var(--cream); }
+.btn.big { font-size: clamp(22px, 2.4vw, 34px); padding: 0.55em 2.4em; }
+.btn:disabled { opacity: 0.35; cursor: default; transform: none; }
+
+.hint { font-size: clamp(12px, 1.05vw, 16px); opacity: 0.7; margin-top: 1.4vh; text-align: center; }
+.hint.bottom { position: absolute; bottom: 2.2vh; left: 0; right: 0; }
+.note { font-size: clamp(14px, 1.3vw, 19px); margin-top: 1.6vh; min-height: 1.3em; text-align: center; }
+
+/* ---------- screens ---------- */
+.screen {
+  position: absolute; inset: 0; display: none;
+  align-items: center; justify-content: center;
+}
+.screen.active { display: flex; animation: fade-in 0.25s ease-out; }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+/* ---------- the Instax Mini film card ----------
+   A 54 x 86 mm card with a 46 x 62 mm picture area: 4 mm sides, 6 mm top,
+   18 mm chin. Set --h for the card's height; everything else follows. */
+.film-card {
+  --h: 70vh;
+  position: relative;
+  height: var(--h);
+  width: calc(var(--h) * 54 / 86);
+  flex: none;
+  border-radius: calc(var(--h) * 0.012);
+  background-color: var(--film-white);
+  background-image: var(--film-texture, none);
+  background-size: 160px 160px;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.7),
+    0 1px 2px rgba(0, 0, 0, 0.08),
+    0 calc(var(--h) * 0.025) calc(var(--h) * 0.05) var(--shadow);
+}
+/* the faint seam across the chin where the developer pod sits */
+.film-card::before {
+  content: ""; position: absolute;
+  left: calc(var(--h) * 1.2 / 86); right: calc(var(--h) * 1.2 / 86);
+  top: calc(var(--h) * 71.2 / 86);
+  height: 1px; background: rgba(0, 0, 0, 0.045);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+.film-card .picture {
+  position: absolute; overflow: hidden;
+  left: calc(var(--h) * 4 / 86);
+  top: calc(var(--h) * 6 / 86);
+  width: calc(var(--h) * 46 / 86);
+  height: calc(var(--h) * 62 / 86);
+  background: #2b2a26;
+}
+/* the slight step where the picture window meets the white frame */
+.film-card .picture::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.18), inset 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+.film-card .picture > canvas, .film-card .picture > img, .film-card .picture > video {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block;
+}
+.print-card .picture { background: var(--country-air); }
+
+/* ---------- live view ---------- */
+#screen-live { gap: 4vw; }
+.live-center { display: flex; flex-direction: column; align-items: center; }
+.live-card { --h: min(70vh, 46vw); }
+#video { transform: scaleX(-1); filter: sepia(0.14) saturate(0.92) contrast(1.05) brightness(1.03); }
+.look-overlay {
+  position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse at center, rgba(0,0,0,0) 55%, rgba(40, 25, 10, 0.32) 100%);
+}
+.shoot-label { font-size: clamp(20px, 2.4vw, 34px); height: 1.4em; margin-bottom: 1.2vh; }
+.countdown {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-size: calc(var(--h) * 0.3); color: var(--cream);
+  text-shadow: 0 0 2px var(--iguana), 0 4px 18px rgba(0, 0, 0, 0.35);
+  -webkit-text-stroke: 3px var(--iguana); paint-order: stroke fill;
+  pointer-events: none;
+}
+.countdown.pop { animation: pop 1s ease-out; }
+@keyframes pop {
+  0% { transform: scale(1.35); opacity: 0; }
+  15% { transform: scale(1); opacity: 1; }
+  85% { opacity: 1; }
+  100% { transform: scale(0.92); opacity: 0.2; }
+}
+.camera-message {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  text-align: center; padding: 10%; color: var(--cream); font-size: clamp(16px, 1.6vw, 24px);
+}
+.dots { display: flex; gap: 14px; height: 22px; margin: 2.2vh 0 1.2vh; align-items: center; }
+.dots span {
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--cream); box-shadow: 0 0 0 3px var(--iguana);
+}
+.dots span.on { background: var(--cornflower); }
+.ovals { display: flex; flex-direction: column; justify-content: space-around; height: 86vh; }
+.ovals canvas { width: clamp(70px, 8vw, 130px); height: auto; display: block; }
+body.shooting #start-btn, body.shooting .live-center .hint { visibility: hidden; }
+
+/* ---------- picker ---------- */
+#screen-pick { gap: 5vw; padding-bottom: 8vh; }
+.pick-left, .pick-right { display: flex; flex-direction: column; align-items: center; }
+.thumbs {
+  --th: min(31vh, 22vw);
+  display: grid; grid-template-columns: repeat(2, calc(var(--th) * 0.75)); gap: 2.4vh;
+}
+.thumb {
+  position: relative; width: calc(var(--th) * 0.75); height: var(--th);
+  padding: 0; border: 0; border-radius: 6px; overflow: visible; cursor: pointer; background: none;
+}
+.thumb img { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; display: block; }
+.thumb::after {
+  content: ""; position: absolute; inset: 0; border-radius: 6px;
+  background: var(--glass-green); opacity: 0.55; transition: opacity 0.15s;
+}
+.thumb.selected::after { opacity: 0; }
+.thumb.selected { box-shadow: 0 0 0 6px var(--cornflower); }
+.thumb .num {
+  position: absolute; left: 12px; bottom: 6px; z-index: 2; font-size: 30px; color: var(--cream);
+  -webkit-text-stroke: 2px var(--iguana); paint-order: stroke fill;
+}
+.thumb .badge {
+  position: absolute; right: 10px; top: 10px; z-index: 2; width: 46px; height: 46px; border-radius: 50%;
+  background: var(--cornflower); color: var(--cream); display: none;
+  align-items: center; justify-content: center; font-size: 26px;
+}
+.thumb.selected .badge { display: flex; }
+.print-card { --h: min(66vh, 40vw); }
+.empty-msg {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  text-align: center; padding: 12%; font-size: clamp(16px, 1.6vw, 24px);
+}
+.actions { position: absolute; right: 4vw; bottom: 7vh; display: flex; gap: 14px; }
+.actions.inline { position: static; margin-top: 3vh; }
+
+/* ---------- copies / status (print on the left, controls on the right) ---------- */
+.split { gap: 6vw; }
+.split-left, .split-right { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.split-right { min-width: 32vw; }
+.oval-row { display: flex; gap: 22px; margin-bottom: 3vh; }
+.oval-row canvas { width: clamp(44px, 4.6vw, 70px); height: auto; }
+.stepper { display: flex; align-items: center; gap: 3vw; }
+.count { font-size: clamp(90px, 13vw, 190px); line-height: 1; min-width: 1.2em; text-align: center; }
+.round {
+  width: clamp(64px, 7vw, 108px); height: clamp(64px, 7vw, 108px); border-radius: 50%; border: 0;
+  background: var(--cornflower); color: var(--cream); font: inherit; font-size: clamp(36px, 4vw, 60px);
+  cursor: pointer; line-height: 1;
+}
+.round:disabled { background: var(--country-air); cursor: default; }
+.sub { font-size: clamp(18px, 2vw, 30px); margin-top: 1.5vh; text-align: center; max-width: 36vw; }
+#status-headline { font-size: clamp(34px, 4.4vw, 64px); }
+.bar {
+  width: min(28vw, 380px); height: 14px; border-radius: 999px; background: var(--country-air);
+  margin-top: 3vh; overflow: hidden;
+}
+.bar > div { height: 100%; width: 0%; background: var(--cornflower); border-radius: 999px; transition: width 0.25s linear; }
+
+/* ---------- between-shot feedback ---------- */
+.shot-feedback {
+  position: fixed; inset: 0; z-index: 30; background: var(--cream);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.feedback-card { --h: min(70vh, 46vw); transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1); }
+.shot-feedback.settle .feedback-card { transform: translateY(-4vh) scale(0.55) rotate(-4deg); }
+.feedback-label {
+  position: absolute; bottom: 14vh; font-size: clamp(28px, 3.4vw, 48px);
+  opacity: 0; transition: opacity 0.2s 0.2s;
+}
+.shot-feedback.settle .feedback-label { opacity: 1; }
+.flash {
+  position: fixed; inset: 0; z-index: 40; background: #fff;
+  opacity: 0; pointer-events: none;
+}
